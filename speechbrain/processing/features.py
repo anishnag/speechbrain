@@ -36,6 +36,7 @@ Authors
 import math
 import torch
 import logging
+from ..utils.io import open_remote
 from packaging import version
 from speechbrain.utils.checkpoints import (
     mark_as_saver,
@@ -1207,5 +1208,6 @@ class InputNormalization(torch.nn.Module):
             Passed to torch.load(..., map_location=device)
         """
         del end_of_epoch  # Unused here.
-        stats = torch.load(path, map_location=device)
+        with open_remote(str(path), 'rb') as f:
+            stats = torch.load(f, map_location=device)
         self._load_statistics_dict(stats)

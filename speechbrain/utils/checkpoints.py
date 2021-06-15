@@ -58,6 +58,10 @@ import inspect
 import shutil
 import logging
 import warnings
+import io
+
+from pathy import Pathy
+from .io import open_remote
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +94,11 @@ def torch_recovery(obj, path, end_of_epoch, device=None):
     """
     del end_of_epoch  # Unused
     try:
-        obj.load_state_dict(torch.load(path, map_location=device), strict=True)
+        with open_remote(str(path), 'rb') as f:
+            obj.load_state_dict(torch.load(f, map_location=device), strict=True)
     except TypeError:
-        obj.load_state_dict(torch.load(path, map_location=device))
+        with open_remote(str(path), 'rb') as f:
+            obj.load_state_dict(torch.load(f, map_location=device))
 
 
 def torch_save(obj, path):
@@ -139,9 +145,10 @@ def torch_parameter_transfer(obj, path, device):
     None
         The object is modified in place.
     """
-    incompatible_keys = obj.load_state_dict(
-        torch.load(path, map_location=device), strict=False
-    )
+    with open_remote(str(path), 'rb') as f:
+        incompatible_keys = obj.load_state_dict(
+            torch.load(f, map_location=device), strict=False
+        )
     for missing_key in incompatible_keys.missing_keys:
         logger.warning(
             f"During parameter transfer to {obj} loading from "
@@ -203,7 +210,7 @@ def mark_as_saver(method):
     """
     sig = inspect.signature(method)
     try:
-        sig.bind(object(), pathlib.Path("testpath"))
+        sig.bind(object(), Pathy("testpath"))
     except TypeError:
         MSG = "Checkpoint saver must match signature (instance, path)"
         raise TypeError(MSG)
@@ -230,7 +237,7 @@ def mark_as_loader(method):
     """
     sig = inspect.signature(method)
     try:
-        sig.bind(object(), pathlib.Path("testpath"), True, None)
+        sig.bind(object(), Pathy("testpath"), True, None)
     except TypeError:
         MSG = "Checkpoint loader must have signature (self, path, end_of_epoch, device)"
         raise TypeError(MSG)
@@ -263,7 +270,7 @@ def mark_as_transfer(method):
     """
     sig = inspect.signature(method)
     try:
-        sig.bind(object(), pathlib.Path("testpath"), device=None)
+        sig.bind(object(), Pathy("testpath"), device=None)
     except TypeError:
         MSG = "Transfer hook must have signature (self, path, device)"
         raise TypeError(MSG)
@@ -439,8 +446,9 @@ class Checkpointer:
         custom_save_hooks=None,
         allow_partial_load=False,
     ):
-        self.checkpoints_dir = pathlib.Path(checkpoints_dir)
-        os.makedirs(self.checkpoints_dir, exist_ok=True)
+        # self.checkpoints_dir = pathlib.Path(checkpoints_dir)
+        # os.makedirs(self.checkpoints_dir, exist_ok=True)
+        self.checkpoints_dir = Pathy(checkpoints_dir)
         self.recoverables = {}
         if recoverables is not None:
             self.add_recoverables(recoverables)
@@ -999,7 +1007,7 @@ class Checkpointer:
         # directory paths (as produced by _list_checkpoint_dirs)
         checkpoints = []
         for ckpt_dir in checkpoint_dirs:
-            with open(ckpt_dir / METAFNAME) as fi:
+            with open_remote(str(ckpt_dir / METAFNAME)) as fi:
                 meta = yaml.load(fi, Loader=yaml.Loader)
             paramfiles = {}
             for ckptfile in ckpt_dir.iterdir():
@@ -1012,7 +1020,7 @@ class Checkpointer:
     def _is_checkpoint_dir(path):
         # This internal method verifies whether a given path points to a
         # directory that holds a checkpoint.
-        path = pathlib.Path(path)
+        path = Pathy(path)
         if not path.is_dir():
             return False
         if not path.name.startswith(CKPT_PREFIX):
@@ -1043,7 +1051,7 @@ class Checkpointer:
         # This internal method saves the meta information in the given path
         meta = {"unixtime": time.time(), "end-of-epoch": end_of_epoch}
         meta.update(meta_to_include)
-        with open(fpath, "w") as fo:
+        with open_remote(fpath, "w") as fo:
             fo.write("# yamllint disable\n")
             fo.write(yaml.dump(meta))
         return meta
