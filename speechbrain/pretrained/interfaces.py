@@ -60,7 +60,7 @@ class Pretrained:
     MODULES_NEEDED = []
 
     def __init__(
-        self,modules=None, hparams=None, run_opts=None, freeze_params=True
+        self, modules=None, hparams=None, run_opts=None, freeze_params=True
     ):
 
         # Arguments passed via the run opts dictionary. Set a limited
