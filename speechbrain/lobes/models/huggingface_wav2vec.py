@@ -79,20 +79,16 @@ class HuggingFaceWav2Vec2(nn.Module):
 
         # Download the extractor from HuggingFace.
         # The extractor is only used to retrieve the normalisation
-        self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
-            source, cache_dir=save_path
-        )
+        self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(source)
 
         # Download the model from HuggingFace.
         # if pretrain is False, we do not download the pretrained weights
         # it it is True, we download and load them.
         if not (pretrain):
-            config = Wav2Vec2Config.from_pretrained(source, cache_dir=save_path)
+            config = Wav2Vec2Config.from_pretrained(source)
             self.model = Wav2Vec2Model(config)
         else:
-            self.model = Wav2Vec2Model.from_pretrained(
-                source, cache_dir=save_path
-            )
+            self.model = Wav2Vec2Model.from_pretrained(source)
 
         # set apply_spec_augment
         self.model.config.apply_spec_augment = apply_spec_augment
