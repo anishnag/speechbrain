@@ -6,6 +6,7 @@ Authors
 from .checkpoints import register_checkpoint_hooks
 from .checkpoints import mark_as_saver
 from .checkpoints import mark_as_loader
+from .io import open_remote
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class EpochCounter:
 
     @mark_as_saver
     def _save(self, path):
-        with open(path, "w") as fo:
+        with open_remote(str(path), "w") as fo:
             fo.write(str(self.current))
 
     @mark_as_loader
@@ -59,7 +60,7 @@ class EpochCounter:
         #  However, parameter transfer to EpochCounter should
         #  probably never be used really.
         del device  # Not used.
-        with open(path) as fi:
+        with open_remote(str(path)) as fi:
             saved_value = int(fi.read())
             if end_of_epoch:
                 self.current = saved_value

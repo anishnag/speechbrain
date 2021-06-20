@@ -10,6 +10,7 @@ Authors
 import math
 import torch
 import logging
+from ..utils.io import open_remote
 from speechbrain.utils import checkpoints
 
 logger = logging.getLogger(__name__)
@@ -139,7 +140,8 @@ class NewBobScheduler:
     def load(self, path, end_of_epoch=False, device=None):
         del end_of_epoch  # Unused in this class
         del device  # Unused in here
-        data = torch.load(path)
+        with open_remote(str(path), 'rb') as fin:
+            data = torch.load(fin)
         self.hyperparam_value = data["hyperparam_value"]
         self.metric_values = data["metric_values"]
         self.current_patient = data["current_patient"]
@@ -336,7 +338,8 @@ class NoamScheduler:
     def load(self, path, end_of_epoch=False, device=None):
         del end_of_epoch  # Unused in this class
         del device
-        data = torch.load(path)
+        with open_remote(str(path), 'rb') as fin:
+            data = torch.load(fin)
         self.losses = data["losses"]
         self.n_steps = data["n_steps"]
 
@@ -437,7 +440,8 @@ class CyclicCosineScheduler:
     def load(self, path, end_of_epoch=False, device=None):
         del end_of_epoch  # Unused in this class
         del device  # Unused here
-        data = torch.load(path)
+        with open_remote(str(path), 'rb') as fin:
+            data = torch.load(fin)
         self.losses = data["losses"]
         self.n_steps = data["n_steps"]
 
@@ -547,7 +551,8 @@ class ReduceLROnPlateau:
     def load(self, path, end_of_epoch=False, device=None):
         del end_of_epoch  # Unused in this class
         del device  # Not used
-        data = torch.load(path)
+        with open_remote(str(path), 'rb') as fin:
+            data = torch.load(fin)
         self.losses = data["losses"]
         self.anchor = data["anchor"]
         self.patience_counter = data["patience_counter"]
@@ -716,6 +721,7 @@ class CyclicLRScheduler:
     def load(self, path, end_of_epoch=False, device=None):
         del end_of_epoch  # Unused in this class
         del device
-        data = torch.load(path)
+        with open_remote(str(path), 'rb') as fin:
+            data = torch.load(fin)
         self.losses = data["losses"]
         self.clr_iterations = data["clr_iterations"]
