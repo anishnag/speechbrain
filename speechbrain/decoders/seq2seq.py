@@ -618,11 +618,14 @@ class S2SBeamSearcher(S2SBaseSearcher):
         # This variable will be used when using_max_attn_shift=True
         prev_attn_peak = torch.zeros(batch_size * self.beam_size, device=device)
 
+        print(max_decode_steps)
+
         for t in range(max_decode_steps):
+            print(t)
             # terminate condition
             if self._check_full_beams(hyps_and_scores, self.beam_size):
                 break
-
+            
             log_probs, memory, attn = self.forward_step(
                 inp_tokens, memory, enc_states, enc_lens
             )
@@ -677,6 +680,9 @@ class S2SBeamSearcher(S2SBaseSearcher):
                     g, ctc_memory, ctc_candidates, attn
                 )
                 log_probs = log_probs + self.ctc_weight * ctc_log_probs
+
+                # print(log_probs.shape)
+                # print(log_probs)
 
             scores = sequence_scores.unsqueeze(1).expand(-1, vocab_size)
             scores = scores + log_probs
@@ -786,6 +792,8 @@ class S2SBeamSearcher(S2SBaseSearcher):
 
             # Block the paths that have reached eos.
             sequence_scores.masked_fill_(is_eos, float("-inf"))
+        
+        print('done with loop')
 
         if not self._check_full_beams(hyps_and_scores, self.beam_size):
             # Using all eos to fill-up the hyps.
