@@ -21,6 +21,7 @@ import torchaudio
 import json
 import re
 from speechbrain.utils.torch_audio_backend import get_torchaudio_backend
+from ..utils.io import open_remote
 
 torchaudio_backend = get_torchaudio_backend()
 torchaudio.set_audio_backend(torchaudio_backend)
@@ -125,7 +126,7 @@ def load_data_csv(csv_path, replacements={}):
     '/home/utt1.wav'
     """
 
-    with open(csv_path, newline="") as csvfile:
+    with open_remote(csv_path, newline="") as csvfile:
         result = {}
         reader = csv.DictReader(csvfile, skipinitialspace=True)
         variable_finder = re.compile(r"\$([\w.]+)")
