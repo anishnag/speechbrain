@@ -164,7 +164,7 @@ class Pretrainer:
         logger.debug(
             f"Collecting files (or symlinks) for pretraining in {self.collect_in}."
         )
-        self.collect_in.mkdir(exist_ok=True)
+        # self.collect_in.mkdir(exist_ok=True)
         loadable_paths = {}
         for name in self.loadables:
             save_filename = name + PARAMFILE_EXT
