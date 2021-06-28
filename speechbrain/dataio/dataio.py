@@ -61,7 +61,7 @@ def load_data_json(json_path, replacements={}):
     '/home/ex2.wav'
 
     """
-    with open(json_path, "r") as f:
+    with open_remote(json_path, "r") as f:
         out_json = json.load(f)
     _recursive_format(out_json, replacements)
     return out_json
@@ -335,7 +335,7 @@ def load_pickle(pickle_path):
     out : object
         Python object loaded from pickle.
     """
-    with open(pickle_path, "rb") as f:
+    with open_remote(pickle_path, "rb") as f:
         out = pickle.load(f)
     return out
 
@@ -611,8 +611,8 @@ def write_txt_file(data, filename, sampling_rate=None):
     """
     del sampling_rate  # Not used.
     # Check if the path of filename exists
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w") as fout:
+    # os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open_remote(filename, "w") as fout:
         if isinstance(data, torch.Tensor):
             data = data.tolist()
         if isinstance(data, np.ndarray):
@@ -781,7 +781,7 @@ def get_md5(file):
     BUF_SIZE = 65536
     md5 = hashlib.md5()
     # Computing md5
-    with open(file, "rb") as f:
+    with open_remote(file, "rb") as f:
         while True:
             data = f.read(BUF_SIZE)
             if not data:
@@ -837,7 +837,7 @@ def save_pkl(obj, file):
     >>> load_pkl(tmpfile)
     [1, 2, 3, 4, 5]
     """
-    with open(file, "wb") as f:
+    with open_remote(file, "wb") as f:
         pickle.dump(obj, f)
 
 
@@ -867,8 +867,8 @@ def load_pkl(file):
             break
 
     try:
-        open(file + ".lock", "w").close()
-        with open(file, "rb") as f:
+        open_remote(file + ".lock", "w").close()
+        with open_remote(file, "rb") as f:
             return pickle.load(f)
     finally:
         if os.path.isfile(file + ".lock"):
@@ -992,11 +992,11 @@ def merge_csvs(data_folder, csv_lst, merged_csv):
     write_path = os.path.join(data_folder, merged_csv)
     if os.path.isfile(write_path):
         logger.info("Skipping merging. Completed in previous run.")
-    with open(os.path.join(data_folder, csv_lst[0])) as f:
+    with open_remote(os.path.join(data_folder, csv_lst[0])) as f:
         header = f.readline()
     lines = []
     for csv_file in csv_lst:
-        with open(os.path.join(data_folder, csv_file)) as f:
+        with open_remote(os.path.join(data_folder, csv_file)) as f:
             for i, line in enumerate(f):
                 if i == 0:
                     # Checking header
@@ -1006,7 +1006,7 @@ def merge_csvs(data_folder, csv_lst, merged_csv):
                         )
                     continue
                 lines.append(line)
-    with open(write_path, "w") as f:
+    with open_remote(write_path, "w") as f:
         f.write(header)
         for line in lines:
             f.write(line)
