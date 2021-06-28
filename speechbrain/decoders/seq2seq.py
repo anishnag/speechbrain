@@ -618,7 +618,7 @@ class S2SBeamSearcher(S2SBaseSearcher):
         # This variable will be used when using_max_attn_shift=True
         prev_attn_peak = torch.zeros(batch_size * self.beam_size, device=device)
 
-        total_log_probs = torch.Tensor()
+        total_log_probs = torch.Tensor().cuda()
 
         for t in range(max_decode_steps):
             # terminate condition
