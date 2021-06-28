@@ -319,7 +319,7 @@ class S2SBeamSearcher(S2SBaseSearcher):
         max_decode_ratio,
         beam_size,
         topk=1,
-        return_log_probs=False,
+        return_log_probs=True,
         using_eos_threshold=True,
         eos_threshold=1.5,
         length_normalization=True,
@@ -618,10 +618,9 @@ class S2SBeamSearcher(S2SBaseSearcher):
         # This variable will be used when using_max_attn_shift=True
         prev_attn_peak = torch.zeros(batch_size * self.beam_size, device=device)
 
-        print(max_decode_steps)
+        total_log_probs = torch.Tensor()
 
         for t in range(max_decode_steps):
-            print(t)
             # terminate condition
             if self._check_full_beams(hyps_and_scores, self.beam_size):
                 break
@@ -680,9 +679,8 @@ class S2SBeamSearcher(S2SBaseSearcher):
                     g, ctc_memory, ctc_candidates, attn
                 )
                 log_probs = log_probs + self.ctc_weight * ctc_log_probs
-
-                # print(log_probs.shape)
-                # print(log_probs)
+            
+            total_log_probs = torch.cat((total_log_probs, log_probs), 0)
 
             scores = sequence_scores.unsqueeze(1).expand(-1, vocab_size)
             scores = scores + log_probs
@@ -792,9 +790,7 @@ class S2SBeamSearcher(S2SBaseSearcher):
 
             # Block the paths that have reached eos.
             sequence_scores.masked_fill_(is_eos, float("-inf"))
-        
-        print('done with loop')
-
+         
         if not self._check_full_beams(hyps_and_scores, self.beam_size):
             # Using all eos to fill-up the hyps.
             eos = (
@@ -824,7 +820,7 @@ class S2SBeamSearcher(S2SBaseSearcher):
         )
 
         if self.return_log_probs:
-            return predictions, topk_scores, log_probs
+            return predictions, topk_scores, total_log_probs
         else:
             return predictions, topk_scores
 
