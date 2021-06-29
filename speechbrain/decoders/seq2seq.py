@@ -618,8 +618,6 @@ class S2SBeamSearcher(S2SBaseSearcher):
         # This variable will be used when using_max_attn_shift=True
         prev_attn_peak = torch.zeros(batch_size * self.beam_size, device=device)
 
-        total_log_probs = []
-
         for t in range(max_decode_steps):
             # terminate condition
             if self._check_full_beams(hyps_and_scores, self.beam_size):
@@ -680,8 +678,6 @@ class S2SBeamSearcher(S2SBaseSearcher):
                 )
                 log_probs = log_probs + self.ctc_weight * ctc_log_probs
             
-            total_log_probs.append(log_probs)
-
             scores = sequence_scores.unsqueeze(1).expand(-1, vocab_size)
             scores = scores + log_probs
 
@@ -819,11 +815,8 @@ class S2SBeamSearcher(S2SBaseSearcher):
             predictions, eos_id=self.eos_index
         )
 
-        # Format batched log probs into tensor
-        total_log_probs = torch.stack(total_log_probs, 0).cuda()
-
         if self.return_log_probs:
-            return predictions, topk_scores, total_log_probs
+            return predictions, topk_scores, log_probs
         else:
             return predictions, topk_scores
 
