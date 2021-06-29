@@ -20,7 +20,7 @@ setup(
     packages=setuptools.find_packages(),
     package_data={"speechbrain": ["version.txt", "log-config.yaml"]},
     install_requires=[
-        # "hyperpyyaml",
+        "hyperpyyaml",
         "joblib",
         "numpy",
         "packaging",
