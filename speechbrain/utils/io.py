@@ -1,10 +1,11 @@
 """
-A set of I/O utils that allow us to open files on remote storage as if they were present locally and access
-into HDFS storage using Tensorflow's C++ FileStream API.
-Currently only includes wrappers for Google's GCS, but this can easily be expanded for AWS S3 buckets.
+A set of I/O utils that allow us to open files on remote storage as if they were present locally.
+Currently only includes wrappers for Google's GCS, but this can easily be expanded for AWS S3\
+buckets.
 """
 import os
-from tensorflow.io import gfile
+from glob import glob
+from pathy import Pathy  # https://github.com/justindujardin/pathy
 
 
 def is_remote_path(path):
@@ -21,15 +22,8 @@ def path_exists_remote(path):
     `gs://...`
     """
     if is_remote_path(path):
-        return gfile.exists(path)
+        return Pathy(path).exists()
     return os.path.exists(path)
-
-
-def copy_remote(src, dst, overwrite=False):
-    """
-    Allows us to copy a file from local to remote or vice versa
-    """
-    return gfile.copy(src, dst, overwrite)
 
 
 def open_remote(path, mode='r', buffering=-1, encoding=None, newline=None, closefd=True, opener=None):
@@ -44,8 +38,20 @@ def open_remote(path, mode='r', buffering=-1, encoding=None, newline=None, close
         do something with the file f, whether or not we have local access to it
     """
     if is_remote_path(path):
-        return gfile.GFile(path, mode=mode)
-    return open(path, mode, buffering=buffering, encoding=encoding, newline=newline, closefd=closefd, opener=opener)
+        return Pathy(path).open(
+            mode=mode,
+            buffering=(8192 if buffering == -1 else buffering),
+            encoding=encoding,
+            newline=newline
+        )
+    return open(
+        path, mode,
+        buffering=buffering,
+        encoding=encoding,
+        newline=newline,
+        closefd=closefd,
+        opener=opener
+    )
 
 
 def isdir_remote(path):
@@ -53,7 +59,7 @@ def isdir_remote(path):
     Wrapper to check if remote and local paths are directories
     """
     if is_remote_path(path):
-        return gfile.isdir(path)
+        return Pathy(path).is_dir()
     return os.path.isdir(path)
 
 
@@ -62,20 +68,37 @@ def listdir_remote(path):
     Wrapper to list paths in local dirs (alternative to using a glob, I suppose)
     """
     if is_remote_path(path):
-        return gfile.listdir(path)
+        return [blob.name for blob in Pathy(path).ls()]
     return os.listdir(path)
 
 
-def glob_remote(filename):
+def stat_remote(path):
+    """
+    Returns FileStatistics struct that contains information about the path
+    """
+    return Pathy(path).stat()
+
+
+def size_remote(path):
+    """
+    Returns file size in bytes.
+    """
+    if is_remote_path(path):
+        return Pathy(path).stat().size
+    return os.path.getsize(path)
+
+
+def glob_remote(pattern, str_cast=True):
     """
     Wrapper that provides globs on local and remote paths like `gs://...`
+    Returns list of paths or Pathy objects based on toggle.
     """
-    return gfile.glob(filename)
+    basepath, subpattern = pattern.split('*', 1)
+    if is_remote_path(basepath):
+        paths = Pathy(basepath).glob('*%s' % subpattern)
+        if str_cast:
+            return list(map(lambda x: str(x), paths))
+        return paths
+    else:
+        return glob(pattern)
 
-
-def remove_remote(filename):
-    """
-    Wrapper that can remove local and remote files like `gs://...`
-    """
-    # Conditional import
-    return gfile.remove(filename)
