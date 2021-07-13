@@ -85,10 +85,10 @@ class HuggingFaceWav2Vec2(nn.Module):
         # if pretrain is False, we do not download the pretrained weights
         # it it is True, we download and load them.
         if not (pretrain):
-            config = Wav2Vec2Config.from_pretrained(source)
+            config = Wav2Vec2Config.from_pretrained(source, cache_dir=save_path)
             self.model = Wav2Vec2Model(config)
         else:
-            self.model = Wav2Vec2Model.from_pretrained(source)
+            self.model = Wav2Vec2Model.from_pretrained(source, cache_dir=save_path)
 
         # set apply_spec_augment
         self.model.config.apply_spec_augment = apply_spec_augment
