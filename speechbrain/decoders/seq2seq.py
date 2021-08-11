@@ -559,11 +559,9 @@ class S2SBeamSearcher(S2SBaseSearcher):
         if self.lm_weight > 0:
             lm_memory = self.reset_lm_mem(batch_size * self.beam_size, device)
 
-        ctc_outputs = self.ctc_forward_step(enc_states)
-
         if self.ctc_weight > 0:
             # (batch_size * beam_size, L, vocab_size)
-            # ctc_outputs = self.ctc_forward_step(enc_states)
+            ctc_outputs = self.ctc_forward_step(enc_states)
             ctc_scorer = CTCPrefixScorer(
                 ctc_outputs,
                 enc_lens,
@@ -818,7 +816,7 @@ class S2SBeamSearcher(S2SBaseSearcher):
         )
 
         if self.return_log_probs:
-            return predictions, topk_scores, ctc_outputs
+            return predictions, topk_scores, log_probs
         else:
             return predictions, topk_scores
 
