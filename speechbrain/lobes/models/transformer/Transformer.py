@@ -146,7 +146,7 @@ class PositionalEncoding(nn.Module):
     torch.Size([1, 120, 512])
     """
 
-    def __init__(self, input_size, max_len=2500):
+    def __init__(self, input_size, max_len=5000):
         super().__init__()
         self.max_len = max_len
         pe = torch.zeros(self.max_len, input_size, requires_grad=False)
